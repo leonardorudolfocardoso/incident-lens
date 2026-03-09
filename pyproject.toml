@@ -2,6 +2,7 @@
 name = "incident-lens"
 version = "0.1.0"
 description = ""
+package-mode = false
 authors = [
     {name = "Leonardo C.",email = "leonardorudolfocardoso@gmail.com"}
 ]
