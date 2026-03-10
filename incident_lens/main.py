@@ -7,7 +7,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from incident_lens.database import get_db
+from incident_lens.jobs import run_analysis
 from incident_lens.models import IncidentLogModel, IncidentModel
+from incident_lens.queue import queue
 
 app = FastAPI(title="IncidentLens")
 
@@ -52,7 +54,7 @@ def create_incident(payload: IncidentCreate, db: Session = Depends(get_db)) -> I
     db.add(incident)
     db.commit()
     db.refresh(incident)
-    # TODO: enqueue analysis job
+    queue.enqueue(run_analysis, str(incident.id))
     return Incident.model_validate(incident)
 
 
