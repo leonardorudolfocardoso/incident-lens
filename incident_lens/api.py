@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from incident_lens.database import get_db
 from incident_lens.jobs import run_analysis
-from incident_lens.models import IncidentLogModel, IncidentModel
+from incident_lens.models import IncidentAnalysis, IncidentLogModel, IncidentModel
 from incident_lens.queue import queue
 
 app = FastAPI(title="IncidentLens")
@@ -41,6 +41,17 @@ class Incident(BaseModel):
     created_at: datetime
 
 
+class AnalysisResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    incident_id: UUID
+    summary: str
+    suspected_service: str
+    confidence: float
+    recommendations: list[str]
+
+
 @app.post("/incidents", response_model=Incident, status_code=201)
 def create_incident(payload: IncidentCreate, db: Session = Depends(get_db)) -> Incident:
     incident = IncidentModel(
@@ -54,7 +65,7 @@ def create_incident(payload: IncidentCreate, db: Session = Depends(get_db)) -> I
     db.add(incident)
     db.commit()
     db.refresh(incident)
-    queue.enqueue(run_analysis, str(incident.id))
+    queue.enqueue(run_analysis, incident.id)
     return Incident.model_validate(incident)
 
 
@@ -64,3 +75,15 @@ def get_incident(incident_id: UUID, db: Session = Depends(get_db)) -> Incident:
     if incident is None:
         raise HTTPException(status_code=404, detail="Incident not found")
     return Incident.model_validate(incident)
+
+
+@app.get("/incidents/{incident_id}/analysis", response_model=AnalysisResponse)
+def get_analysis(incident_id: UUID, db: Session = Depends(get_db)) -> AnalysisResponse:
+    from sqlalchemy import select
+
+    analysis = db.scalar(
+        select(IncidentAnalysis).where(IncidentAnalysis.incident_id == incident_id)
+    )
+    if analysis is None:
+        raise HTTPException(status_code=404, detail="Analysis not available yet")
+    return AnalysisResponse.model_validate(analysis)
