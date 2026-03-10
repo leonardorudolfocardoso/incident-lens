@@ -13,4 +13,4 @@ COPY incident_lens/ incident_lens/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "incident_lens.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "incident_lens.api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -11,7 +11,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
 
 from incident_lens.database import Base, get_db
-from incident_lens.main import app
+from incident_lens.api import app
 
 engine = create_engine(
     "sqlite://",
@@ -41,7 +41,7 @@ def setup_db():
 
 @pytest.fixture(autouse=True)
 def mock_queue():
-    with patch("incident_lens.main.queue.enqueue") as mock:
+    with patch("incident_lens.api.queue.enqueue") as mock:
         yield mock
 
 
