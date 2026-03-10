@@ -1,12 +1,14 @@
 import os
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-
-os.environ.setdefault("DATABASE_URL", "sqlite://")
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
 
 from incident_lens.database import Base, get_db
 from incident_lens.main import app
@@ -35,6 +37,12 @@ def setup_db():
     Base.metadata.create_all(engine)
     yield
     Base.metadata.drop_all(engine)
+
+
+@pytest.fixture(autouse=True)
+def mock_queue():
+    with patch("incident_lens.main.queue.enqueue") as mock:
+        yield mock
 
 
 @pytest.fixture

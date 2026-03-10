@@ -1,4 +1,8 @@
+from unittest.mock import MagicMock
+
 from fastapi.testclient import TestClient
+
+from incident_lens.jobs import run_analysis
 
 
 def test_create_incident_returns_201(client: TestClient):
@@ -42,3 +46,12 @@ def test_created_incident_is_retrievable(client: TestClient):
 def test_get_nonexistent_incident_returns_404(client: TestClient):
     response = client.get("/incidents/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+
+
+def test_create_incident_enqueues_analysis_job(client: TestClient, mock_queue: MagicMock):
+    response = client.post(
+        "/incidents",
+        json={"service_name": "auth-service", "alert_type": "high_error_rate"},
+    )
+    incident_id = response.json()["id"]
+    mock_queue.assert_called_once_with(run_analysis, incident_id)
