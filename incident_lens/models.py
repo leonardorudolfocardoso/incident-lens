@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, String, Uuid
+from sqlalchemy import JSON, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from incident_lens.database import Base
@@ -30,3 +30,14 @@ class IncidentLogModel(Base):
     message: Mapped[str] = mapped_column(String)
     timestamp: Mapped[datetime]
     incident: Mapped["IncidentModel"] = relationship(back_populates="logs")
+
+
+class IncidentAnalysis(Base):
+    __tablename__ = "incident_analysis"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    incident_id: Mapped[UUID] = mapped_column(ForeignKey("incidents.id"), unique=True)
+    summary: Mapped[str] = mapped_column(String)
+    suspected_service: Mapped[str] = mapped_column(String)
+    confidence: Mapped[float]
+    recommendations: Mapped[list] = mapped_column(JSON)
