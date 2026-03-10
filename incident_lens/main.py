@@ -1,14 +1,15 @@
 from datetime import datetime, timezone
 from enum import Enum
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import Depends, FastAPI, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.orm import Session
+
+from incident_lens.database import get_db
+from incident_lens.models import IncidentLogModel, IncidentModel
 
 app = FastAPI(title="IncidentLens")
-
-# In-memory store — will be replaced with PostgreSQL
-_incidents: dict = {}
 
 
 class IncidentStatus(str, Enum):
@@ -29,6 +30,8 @@ class IncidentCreate(BaseModel):
 
 
 class Incident(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     service_name: str
     alert_type: str
@@ -37,22 +40,25 @@ class Incident(BaseModel):
 
 
 @app.post("/incidents", response_model=Incident, status_code=201)
-def create_incident(payload: IncidentCreate) -> Incident:
-    incident = Incident(
-        id=uuid4(),
+def create_incident(payload: IncidentCreate, db: Session = Depends(get_db)) -> Incident:
+    incident = IncidentModel(
         service_name=payload.service_name,
         alert_type=payload.alert_type,
-        status=IncidentStatus.pending,
-        created_at=datetime.now(timezone.utc),
+        logs=[
+            IncidentLogModel(message=log.message, timestamp=log.timestamp)
+            for log in payload.logs
+        ],
     )
-    _incidents[incident.id] = incident
-    # TODO: persist to DB and enqueue analysis job
-    return incident
+    db.add(incident)
+    db.commit()
+    db.refresh(incident)
+    # TODO: enqueue analysis job
+    return Incident.model_validate(incident)
 
 
 @app.get("/incidents/{incident_id}", response_model=Incident)
-def get_incident(incident_id: UUID) -> Incident:
-    incident = _incidents.get(incident_id)
+def get_incident(incident_id: UUID, db: Session = Depends(get_db)) -> Incident:
+    incident = db.get(IncidentModel, incident_id)
     if incident is None:
         raise HTTPException(status_code=404, detail="Incident not found")
-    return incident
+    return Incident.model_validate(incident)
