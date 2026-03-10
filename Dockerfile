@@ -10,6 +10,8 @@ COPY pyproject.toml poetry.lock .
 RUN poetry install --only main --no-root
 
 COPY incident_lens/ incident_lens/
+COPY alembic.ini .
+COPY alembic/ alembic/
 
 EXPOSE 8000
 
