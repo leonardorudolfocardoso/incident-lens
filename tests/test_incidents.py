@@ -1,11 +1,7 @@
 from fastapi.testclient import TestClient
 
-from incident_lens.main import app
 
-client = TestClient(app)
-
-
-def test_create_incident_returns_201():
+def test_create_incident_returns_201(client: TestClient):
     response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
@@ -13,7 +9,7 @@ def test_create_incident_returns_201():
     assert response.status_code == 201
 
 
-def test_create_incident_response_fields():
+def test_create_incident_response_fields(client: TestClient):
     response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
@@ -26,12 +22,12 @@ def test_create_incident_response_fields():
     assert "created_at" in body
 
 
-def test_create_incident_missing_required_fields_returns_422():
+def test_create_incident_missing_required_fields_returns_422(client: TestClient):
     response = client.post("/incidents", json={})
     assert response.status_code == 422
 
 
-def test_created_incident_is_retrievable():
+def test_created_incident_is_retrievable(client: TestClient):
     create_response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
@@ -43,6 +39,6 @@ def test_created_incident_is_retrievable():
     assert get_response.json()["id"] == incident_id
 
 
-def test_get_nonexistent_incident_returns_404():
+def test_get_nonexistent_incident_returns_404(client: TestClient):
     response = client.get("/incidents/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
