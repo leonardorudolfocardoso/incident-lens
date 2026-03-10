@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from uuid import UUID
 
 from fastapi.testclient import TestClient
 
@@ -54,4 +55,4 @@ def test_create_incident_enqueues_analysis_job(client: TestClient, mock_queue: M
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
     )
     incident_id = response.json()["id"]
-    mock_queue.assert_called_once_with(run_analysis, incident_id)
+    mock_queue.assert_called_once_with(run_analysis, UUID(incident_id))

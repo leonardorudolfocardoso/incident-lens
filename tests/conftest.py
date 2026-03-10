@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
+os.environ.setdefault("OPENAI_API_KEY", "test")
 
 from incident_lens.database import Base, get_db
 from incident_lens.api import app
@@ -37,6 +38,12 @@ def setup_db():
     Base.metadata.create_all(engine)
     yield
     Base.metadata.drop_all(engine)
+
+
+@pytest.fixture
+def patch_job_session():
+    with patch("incident_lens.jobs.SessionLocal", TestingSessionLocal):
+        yield
 
 
 @pytest.fixture(autouse=True)
