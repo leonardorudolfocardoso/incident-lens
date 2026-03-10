@@ -5,6 +5,19 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+psycopg://incident:incident@postgres:5432/incident_lens
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: rq worker incidents
+    environment:
+      - DATABASE_URL=postgresql+psycopg://incident:incident@postgres:5432/incident_lens
+      - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
         condition: service_healthy
