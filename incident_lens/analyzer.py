@@ -8,14 +8,14 @@ from incident_lens.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-class _Analysis(BaseModel):
+class Analysis(BaseModel):
     summary: str
     suspected_service: str
     confidence: float
     recommendations: list[str]
 
 
-def analyze(logs: list[str], service_name: str, alert_type: str) -> _Analysis:
+def analyze(logs: list[str], service_name: str, alert_type: str) -> Analysis:
     logger.debug(
         "calling_openai",
         service_name=service_name,
@@ -39,6 +39,6 @@ def analyze(logs: list[str], service_name: str, alert_type: str) -> _Analysis:
                 + "\n".join(logs),
             },
         ],
-        response_format=_Analysis,
+        response_format=Analysis,
     )
     return response.choices[0].message.parsed

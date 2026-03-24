@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 
-from incident_lens.analyzer import _Analysis
+from incident_lens.analyzer import Analysis
 from incident_lens.metrics import incidents_processed_total
 from incident_lens.models import IncidentAnalysis, IncidentModel
 
@@ -58,7 +58,7 @@ def test_run_analysis_job_calls_analyzer_and_stores_result(client: TestClient, p
 
     incident_id = _create_incident(client)
 
-    mock_result = _Analysis(
+    mock_result = Analysis(
         summary="Auth service is failing.",
         suspected_service="auth-service",
         confidence=0.9,
@@ -80,7 +80,7 @@ def test_run_analysis_increments_counter(client: TestClient, patch_job_session):
 
     incident_id = _create_incident(client)
 
-    mock_result = _Analysis(
+    mock_result = Analysis(
         summary="Auth service is failing.",
         suspected_service="auth-service",
         confidence=0.9,
