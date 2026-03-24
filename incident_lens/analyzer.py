@@ -3,6 +3,10 @@ import os
 from openai import OpenAI
 from pydantic import BaseModel
 
+from incident_lens.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class _Analysis(BaseModel):
     summary: str
@@ -12,6 +16,12 @@ class _Analysis(BaseModel):
 
 
 def analyze(logs: list[str], service_name: str, alert_type: str) -> _Analysis:
+    logger.debug(
+        "calling_openai",
+        service_name=service_name,
+        alert_type=alert_type,
+        log_count=len(logs),
+    )
     response = OpenAI(api_key=os.environ["OPENAI_API_KEY"]).beta.chat.completions.parse(
         model="gpt-4o-mini",
         messages=[
