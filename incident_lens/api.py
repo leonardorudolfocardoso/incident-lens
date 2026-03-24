@@ -3,13 +3,19 @@ from enum import Enum
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from incident_lens.database import get_db
 from incident_lens.jobs import run_analysis
+from incident_lens.logging_config import configure_logging, get_logger
 from incident_lens.models import IncidentAnalysis, IncidentLogModel, IncidentModel
 from incident_lens.queue import queue
+
+configure_logging()
+logger = get_logger(__name__)
 
 app = FastAPI(title="IncidentLens")
 
@@ -66,7 +72,18 @@ def create_incident(payload: IncidentCreate, db: Session = Depends(get_db)) -> I
     db.commit()
     db.refresh(incident)
     queue.enqueue(run_analysis, incident.id)
+    logger.info(
+        "incident_created",
+        incident_id=str(incident.id),
+        service_name=incident.service_name,
+        alert_type=incident.alert_type,
+    )
     return Incident.model_validate(incident)
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/incidents/{incident_id}", response_model=Incident)
