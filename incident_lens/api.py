@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from enum import Enum
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -11,19 +10,13 @@ from sqlalchemy.orm import Session
 from incident_lens.database import get_db
 from incident_lens.jobs import run_analysis
 from incident_lens.logging_config import configure_logging, get_logger
-from incident_lens.models import IncidentAnalysis, IncidentLogModel, IncidentModel
+from incident_lens.models import IncidentAnalysis, IncidentLogModel, IncidentModel, IncidentStatus
 from incident_lens.queue import queue
 
 configure_logging()
 logger = get_logger(__name__)
 
 app = FastAPI(title="IncidentLens")
-
-
-class IncidentStatus(str, Enum):
-    pending = "pending"
-    analyzing = "analyzing"
-    resolved = "resolved"
 
 
 class IncidentLog(BaseModel):

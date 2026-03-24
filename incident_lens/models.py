@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from enum import Enum
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, ForeignKey, String, Uuid
@@ -7,13 +8,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from incident_lens.database import Base
 
 
+class IncidentStatus(str, Enum):
+    pending = "pending"
+    analyzing = "analyzing"
+    resolved = "resolved"
+
+
 class IncidentModel(Base):
     __tablename__ = "incidents"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     service_name: Mapped[str] = mapped_column(String)
     alert_type: Mapped[str] = mapped_column(String)
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(String, default=IncidentStatus.pending)
     created_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc)
     )
