@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -17,14 +17,14 @@ def _create_incident(client: TestClient) -> str:
     return response.json()["id"]
 
 
-def test_get_analysis_returns_404_when_not_available(client: TestClient):
+def test_get_analysis_returns_404_when_not_available(client: TestClient, mock_queue: MagicMock):
     incident_id = _create_incident(client)
     response = client.get(f"/incidents/{incident_id}/analysis")
     assert response.status_code == 404
     assert response.json()["detail"] == "Analysis not available yet"
 
 
-def test_get_analysis_returns_result_when_available(client: TestClient):
+def test_get_analysis_returns_result_when_available(client: TestClient, mock_queue: MagicMock):
     from incident_lens.api import app
     from incident_lens.database import get_db
 
@@ -54,7 +54,7 @@ def test_get_analysis_returns_result_when_available(client: TestClient):
 
 
 def test_run_analysis_job_calls_analyzer_and_stores_result(
-    client: TestClient, patch_job_session, mock_analysis_result: Analysis
+    client: TestClient, mock_queue: MagicMock, patch_job_session, mock_analysis_result: Analysis
 ):
     from incident_lens.api import app
     from incident_lens.database import get_db
@@ -75,7 +75,7 @@ def test_run_analysis_job_calls_analyzer_and_stores_result(
 
 
 def test_run_analysis_increments_counter(
-    client: TestClient, patch_job_session, mock_analysis_result: Analysis
+    client: TestClient, mock_queue: MagicMock, patch_job_session, mock_analysis_result: Analysis
 ):
     from incident_lens.jobs import run_analysis
 

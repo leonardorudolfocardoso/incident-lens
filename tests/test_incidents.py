@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from incident_lens.jobs import run_analysis
 
 
-def test_create_incident_returns_201(client: TestClient):
+def test_create_incident_returns_201(client: TestClient, mock_queue: MagicMock):
     response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
@@ -14,7 +14,7 @@ def test_create_incident_returns_201(client: TestClient):
     assert response.status_code == 201
 
 
-def test_create_incident_response_fields(client: TestClient):
+def test_create_incident_response_fields(client: TestClient, mock_queue: MagicMock):
     response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
@@ -32,7 +32,7 @@ def test_create_incident_missing_required_fields_returns_422(client: TestClient)
     assert response.status_code == 422
 
 
-def test_created_incident_is_retrievable(client: TestClient):
+def test_created_incident_is_retrievable(client: TestClient, mock_queue: MagicMock):
     create_response = client.post(
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},

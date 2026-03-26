@@ -48,7 +48,7 @@ def patch_job_session():
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_queue():
     with patch("incident_lens.api.queue.enqueue") as mock:
         yield mock

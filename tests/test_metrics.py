@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -27,7 +27,7 @@ def test_metrics_contains_analysis_duration_seconds(client: TestClient):
 
 
 def test_incidents_processed_total_increments_after_analysis(
-    client: TestClient, patch_job_session, mock_analysis_result: Analysis
+    client: TestClient, mock_queue: MagicMock, patch_job_session, mock_analysis_result: Analysis
 ):
     from incident_lens.jobs import run_analysis
 
