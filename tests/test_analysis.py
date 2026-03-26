@@ -52,47 +52,36 @@ def test_get_analysis_returns_result_when_available(client: TestClient):
     assert body["recommendations"] == ["Check recent deployments", "Review error logs"]
 
 
-def test_run_analysis_job_calls_analyzer_and_stores_result(client: TestClient, patch_job_session):
+def test_run_analysis_job_calls_analyzer_and_stores_result(
+    client: TestClient, patch_job_session, mock_analysis_result: Analysis
+):
     from incident_lens.api import app
     from incident_lens.database import get_db
     from incident_lens.jobs import run_analysis
 
     incident_id = _create_incident(client)
 
-    mock_result = Analysis(
-        summary="Auth service is failing.",
-        suspected_service="auth-service",
-        confidence=0.9,
-        recommendations=["Restart the service"],
-    )
-
-    with patch("incident_lens.jobs.analyze", return_value=mock_result):
+    with patch("incident_lens.jobs.analyze", return_value=mock_analysis_result):
         run_analysis(UUID(incident_id))
 
     db = next(app.dependency_overrides[get_db]())
     analysis = db.scalar(select(IncidentAnalysis).where(IncidentAnalysis.incident_id == UUID(incident_id)))
     assert analysis is not None
-    assert analysis.summary == mock_result.summary
-    assert analysis.suspected_service == mock_result.suspected_service
-    assert analysis.confidence == mock_result.confidence
-    assert analysis.recommendations == mock_result.recommendations
+    assert analysis.summary == mock_analysis_result.summary
+    assert analysis.suspected_service == mock_analysis_result.suspected_service
+    assert analysis.confidence == mock_analysis_result.confidence
+    assert analysis.recommendations == mock_analysis_result.recommendations
 
 
-def test_run_analysis_increments_counter(client: TestClient, patch_job_session):
+def test_run_analysis_increments_counter(
+    client: TestClient, patch_job_session, mock_analysis_result: Analysis
+):
     from incident_lens.jobs import run_analysis
 
     incident_id = _create_incident(client)
-
-    mock_result = Analysis(
-        summary="Auth service is failing.",
-        suspected_service="auth-service",
-        confidence=0.9,
-        recommendations=["Restart the service"],
-    )
-
     before = incidents_processed_total._value.get()
 
-    with patch("incident_lens.jobs.analyze", return_value=mock_result):
+    with patch("incident_lens.jobs.analyze", return_value=mock_analysis_result):
         run_analysis(UUID(incident_id))
 
     after = incidents_processed_total._value.get()

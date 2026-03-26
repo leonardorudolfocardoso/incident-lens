@@ -11,6 +11,8 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
 os.environ.setdefault("OPENAI_API_KEY", "test")
 
+from incident_lens.analyzer import Analysis
+
 from incident_lens.database import Base, get_db
 from incident_lens.api import app
 
@@ -55,3 +57,13 @@ def mock_queue():
 @pytest.fixture
 def client():
     return TestClient(app)
+
+
+@pytest.fixture
+def mock_analysis_result() -> Analysis:
+    return Analysis(
+        summary="Auth service is failing.",
+        suspected_service="auth-service",
+        confidence=0.9,
+        recommendations=["Restart the service"],
+    )
