@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from incident_lens.database import get_db
@@ -89,8 +90,6 @@ def get_incident(incident_id: UUID, db: Session = Depends(get_db)) -> Incident:
 
 @app.get("/incidents/{incident_id}/analysis", response_model=AnalysisResponse)
 def get_analysis(incident_id: UUID, db: Session = Depends(get_db)) -> AnalysisResponse:
-    from sqlalchemy import select
-
     analysis = db.scalar(
         select(IncidentAnalysis).where(IncidentAnalysis.incident_id == incident_id)
     )
