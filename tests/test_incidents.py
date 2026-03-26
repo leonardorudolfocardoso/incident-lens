@@ -37,6 +37,7 @@ def test_created_incident_is_retrievable(client: TestClient):
         "/incidents",
         json={"service_name": "auth-service", "alert_type": "high_error_rate"},
     )
+    assert create_response.status_code == 201
     incident_id = create_response.json()["id"]
 
     get_response = client.get(f"/incidents/{incident_id}")
