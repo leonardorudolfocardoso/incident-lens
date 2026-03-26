@@ -21,6 +21,7 @@ def test_get_analysis_returns_404_when_not_available(client: TestClient):
     incident_id = _create_incident(client)
     response = client.get(f"/incidents/{incident_id}/analysis")
     assert response.status_code == 404
+    assert response.json()["detail"] == "Analysis not available yet"
 
 
 def test_get_analysis_returns_result_when_available(client: TestClient):
