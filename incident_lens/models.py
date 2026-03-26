@@ -35,7 +35,7 @@ class IncidentLogModel(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     incident_id: Mapped[UUID] = mapped_column(ForeignKey("incidents.id"))
     message: Mapped[str] = mapped_column(String)
-    timestamp: Mapped[datetime]
+    timestamp: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     incident: Mapped["IncidentModel"] = relationship(back_populates="logs")
 
 
