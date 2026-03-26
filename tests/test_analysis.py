@@ -2,6 +2,7 @@ from unittest.mock import patch
 from uuid import UUID
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from incident_lens.analyzer import Analysis
 from incident_lens.metrics import incidents_processed_total
@@ -69,7 +70,7 @@ def test_run_analysis_job_calls_analyzer_and_stores_result(client: TestClient, p
         run_analysis(UUID(incident_id))
 
     db = next(app.dependency_overrides[get_db]())
-    analysis = db.query(IncidentAnalysis).filter_by(incident_id=UUID(incident_id)).first()
+    analysis = db.scalar(select(IncidentAnalysis).where(IncidentAnalysis.incident_id == UUID(incident_id)))
     assert analysis is not None
     assert analysis.summary == "Auth service is failing."
     assert analysis.confidence == 0.9
