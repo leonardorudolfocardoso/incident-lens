@@ -31,6 +31,7 @@ def run_analysis(incident_id: UUID) -> None:
                 "analysis_failed",
                 incident_id=str(incident_id),
                 analysis_status="failed",
+                exc_info=True,
             )
             raise
 
