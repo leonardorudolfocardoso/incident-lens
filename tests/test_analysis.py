@@ -72,8 +72,10 @@ def test_run_analysis_job_calls_analyzer_and_stores_result(client: TestClient, p
     db = next(app.dependency_overrides[get_db]())
     analysis = db.scalar(select(IncidentAnalysis).where(IncidentAnalysis.incident_id == UUID(incident_id)))
     assert analysis is not None
-    assert analysis.summary == "Auth service is failing."
-    assert analysis.confidence == 0.9
+    assert analysis.summary == mock_result.summary
+    assert analysis.suspected_service == mock_result.suspected_service
+    assert analysis.confidence == mock_result.confidence
+    assert analysis.recommendations == mock_result.recommendations
 
 
 def test_run_analysis_increments_counter(client: TestClient, patch_job_session):
